@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='cropfaces',
-    version='0.0.01',
+    version='0.0.02',
     url='https://github.com/tuaplicacionpropia/cropfaces',
     download_url='https://github.com/tuaplicacionpropia/cropfaces/archive/master.zip',
     author=u'tuaplicacionpropia.com',
@@ -26,6 +26,8 @@ setup(
     platforms='any',
     license='MIT',
     install_requires=[
+        'numpy==1.12.0b1', 
+        'opencv-python==3.1.0.3', 
         'Pillow==3.4.2',
     ],
 )
