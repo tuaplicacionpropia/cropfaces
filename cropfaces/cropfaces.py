@@ -275,6 +275,7 @@ class CropFaces:
 
 
 #python -c "import sys; import svgmanager; svgmanager.SvgManager.generate(sys.argv)"
+#./cropfaces.py /home/jmramoss/almacen/ORLAS/orlas_infantiles/infantil_5b teacher
 if __name__ == '__main__':
   cropFaces = CropFaces()
   #cropFaces.cropOrla(sys.argv[1])
