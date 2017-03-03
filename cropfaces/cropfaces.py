@@ -3,6 +3,8 @@
 
 from PIL import Image
 import cv2
+import sys
+import os
 
 '''
 Librería Python: Recorta imágenes dejando las caras para adaptarse a una escala concreta.
@@ -66,6 +68,9 @@ Install opencv:
 
   $ wget http://eclecti.cc/files/2008/03/haarcascade_frontalface_alt.xml
 
+https://github.com/opencv/opencv/tree/master/data
+http://alereimondo.no-ip.org/OpenCV/34/
+https://www.leightley.com/face-and-eye-detection-with-python-static-image/
 
 
 '''
@@ -80,18 +85,53 @@ class BoxArea:
     self.top = top
     self.right = right
     self.bottom = bottom
+    self.width = self.right - self.left
+    self.height = self.bottom - self.top
+
+  def __repr__(self):
+    return '(' + str(self.left) + ', ' + str(self.top) + ', ' + str(self.right) + ', ' + str(self.bottom) + ')'
+
+  def __str__(self):
+    return self.__str__()
 
 class CropFaces:
+  
   def __init__(self, zoom='AUTO', output=None):
-    self.image = image
-    self.faces = list()
-    self.selectedArea = None
-    self.cascade = cv2.CascadeClassifier("/vagrant/detect/haarcascade_frontalface_alt.xml")
-    self.cv_scaleFactor = 1.3
-    self.cv_minNeighbors = 4
+    #self.cascade = cv2.CascadeClassifier("/home/jmramoss/almacen/ORLAS/cropfaces/cropfaces/haarcascade_frontalface_alt.xml")
+
+    #self.cascade = cv2.CascadeClassifier("/home/jmramoss/almacen/ORLAS/cropfaces/cropfaces/haarcascade_eye.xml)
+    #self.cascade = cv2.CascadeClassifier("/home/jmramoss/almacen/ORLAS/cropfaces/cropfaces/haarcascade_frontalface_alt.xml")
+    #self.cascade = cv2.CascadeClassifier("/home/jmramoss/almacen/ORLAS/cropfaces/cropfaces/haarcascade_frontalface_alt2.xml")
+    #self.cascade = cv2.CascadeClassifier("/home/jmramoss/almacen/ORLAS/cropfaces/cropfaces/haarcascade_frontalface_default.xml")
+    #self.cascade = cv2.CascadeClassifier("/home/jmramoss/almacen/ORLAS/cropfaces/cropfaces/haarcascade_profileface.xml")
+
+    #self.cascade = cv2.CascadeClassifier("/home/jmramoss/almacen/ORLAS/cropfaces/cropfaces/haarcascade_upperbody.xml")
+
+    self.cascade = cv2.CascadeClassifier("/home/jmramoss/almacen/ORLAS/cropfaces/cropfaces/haarcascade_frontalface_alt_tree.xml")
+
+    #self.cascade = cv2.CascadeClassifier("/home/jmramoss/Downloads/frontalFace10/haarcascade_frontalface_alt_tree.xml")
+    #self.cascade = cv2.CascadeClassifier("/home/jmramoss/Downloads/frontalFace10/HS.xml")
+    #self.cascade = cv2.CascadeClassifier("/home/jmramoss/Downloads/frontalFace10/parojosG.xml")
+    #self.cascade = cv2.CascadeClassifier("/home/jmramoss/Downloads/frontalFace10/parojos.xml")
+    #self.cascade = cv2.CascadeClassifier("/home/jmramoss/Downloads/frontalFace10/Mouth.xml")
+
+    #self.cascade = cv2.CascadeClassifier("/home/jmramoss/almacen/ORLAS/cropfaces/cropfaces/2haarcascade_frontalface_alt.xml")
+    #self.cascade = cv2.CascadeClassifier("/home/jmramoss/almacen/ORLAS/cropfaces/cropfaces/2haarcascade_frontalface_alt2.xml")
+    #self.cascade = cv2.CascadeClassifier("/home/jmramoss/almacen/ORLAS/cropfaces/cropfaces/2haarcascade_frontalface_alt_tree.xml")
+    #self.cascade = cv2.CascadeClassifier("/home/jmramoss/almacen/ORLAS/cropfaces/cropfaces/2haarcascade_frontalface_default.xml")
+    #self.cascade = cv2.CascadeClassifier("/home/jmramoss/almacen/ORLAS/cropfaces/cropfaces/HS.xml")
+    #self.cascade = cv2.CascadeClassifier("/home/jmramoss/almacen/ORLAS/cropfaces/cropfaces/parojosG.xml")
+
+
+    #self.cascade = cv2.CascadeClassifier("/home/jmramoss/Downloads/frontalFace10/frontalEyes35x16.xml")
+
+
+    #self.cascade = cv2.CascadeClassifier("/home/jmramoss/Downloads/frontalFace10/ojoD.xml")
+
+    self.cv_scaleFactor = 1.1
+    self.cv_minNeighbors = 3
     self.cv_flags = cv2.cv.CV_HAAR_SCALE_IMAGE
     self.cv_size = (20, 20)
-
 
   def cropBox (self, imagePath, box):
     original = Image.open(imagePath)
@@ -100,7 +140,8 @@ class CropFaces:
 
   def crop (self, image):
     box = self.detectBoxFaces(image)
-    self.cropBox(image, box)
+    if box is not None:
+      self.cropBox(image, box)
   
   def detectBoxFaces (self, image):
     result = None
@@ -108,16 +149,29 @@ class CropFaces:
     result = self.mergeFaces(image, faces)
     return result
 
-  def detectFaces(imagePath):
+  def detectFaces(self, imagePath):
     result = list()
 
     img = cv2.imread(imagePath)
-    rects = self.cascade.detectMultiScale(img, self.cv_scaleFactor, self.cv_minNeighbors, self.cv_flags, self.cv_size)
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    #gray = cv2.calcHist(gray, 3)
+    #rects = self.cascade.detectMultiScale(gray, self.cv_scaleFactor, self.cv_minNeighbors, self.cv_flags, self.cv_size)
+    #rects = self.cascade.detectMultiScale(gray, self.cv_scaleFactor, self.cv_minNeighbors, self.cv_flags)
+    rects = self.cascade.detectMultiScale(gray, self.cv_scaleFactor, self.cv_minNeighbors, cv2.cv.CV_HAAR_SCALE_IMAGE, (20, 20))
+    #rects = self.cascade.detectMultiScale(gray, self.cv_scaleFactor, self.cv_minNeighbors)
+    #rects = self.cascade.detectMultiScale(img)
     rects = [] if len(rects) == 0 else rects
-    rects[:, 2:] += rects[:, :2]
+    print rects
+    #rects[:, 2:] += rects[:, :2]
+    #print rects
     for x1, y1, x2, y2 in rects:
-      box = BoxArea(x1, y1, x2, y2)
+      box = BoxArea(x1, y1, x1+x2, y1+y2)
+      cv2.rectangle(img, (box.left, box.top), (box.right, box.bottom), (127, 255, 0), 2)
       result.append(box)
+
+    newName = os.path.basename(imagePath) + '.detected.jpg'
+    cv2.imwrite(newName, img);
+    print result
     
     return result
 
@@ -145,8 +199,84 @@ class CropFaces:
       result = BoxArea(minLeft, minTop, maxRight, maxBottom)
     return result
 
+  def cropOrla (self, image, mode='AUTO'):
+    box = self.detectBoxFaces(image)
+    if box is not None:
+      self.cropBoxOrla(image, box, mode)
+
+  def cropBoxOrla (self, imagePath, box, mode='AUTO'):
+    original = Image.open(imagePath)
+    '''
+    fHead = 1.10#1.10#1.10
+    fSide = 1.10#1.10#1.10
+    fBottom = 3.3#2.90#2.10
+    '''
+    '''
+    fHead = 1.10
+    fSide = 1.10
+    fBottom = 1.8
+    '''
+    '''
+    fHead = 0.7
+    fSide = 1.10
+    fBottom = 2.3
+    '''
+    '''
+    fHead = 0.6
+    fSide = 1.10
+    fBottom = 2.5
+    '''
+    '''
+    fHead = 0.6
+    fSide = 1.10
+    fBottom = 2.7
+    '''
+    fHead = 0.6
+    fSide = 1.10
+    fBottom = 2.6
+    if mode == 'NEAR':
+      fHead = 0.6
+      fSide = 1.10
+      fBottom = 2.3
+    if mode == 'MIDDLE':
+      fHead = 0.6
+      fSide = 1.10
+      fBottom = 2.6
+    if mode == 'FAR':
+      fHead = 0.6
+      fSide = 1.10
+      fBottom = 2.9
+    width = box.width
+    height = box.height
+
+    newbox = BoxArea(box.left - int(fSide*width), box.top - int(fHead*height), box.right + int(fSide*width), box.bottom + int(fBottom*height))
+    cropped = original.crop((newbox.left, newbox.top, newbox.right, newbox.bottom))
+    #cropped.save("img1.png", "PNG")
+    #cropped.save("img1.jpg", "jpeg")
+    #cropped.save("img1.jpg", "jpeg", quality=100, optimize=True, progressive=True)
+    newFileFolder = os.path.dirname(imagePath)
+    oldFileName = os.path.basename(imagePath)
+    extIdx = oldFileName.rindex('.')
+    fileExt = oldFileName[extIdx+1:]
+    newFileName = oldFileName[0:extIdx] + '_orla' + '.' + fileExt
+    newFile = os.path.join(newFileFolder, newFileName)
+    cropped.save(newFile, "jpeg", quality=100, optimize=True, progressive=True)
+
+  def cropOrlas (self, folder, prefix):
+    files = os.listdir(folder)
+    modes = ['NEAR', 'MIDDLE', 'FAR']
+    modeIdx = 0
+    for filename in files:
+      if filename.startswith(prefix):
+        fullpath = os.path.join(folder, filename)
+        mode = modes[modeIdx%len(modes)]
+        self.cropOrla(fullpath, mode)
+        modeIdx += 1
+
+
 #python -c "import sys; import svgmanager; svgmanager.SvgManager.generate(sys.argv)"
 if __name__ == '__main__':
   cropFaces = CropFaces()
-  cropFaces.crop(sys.argv)
+  #cropFaces.cropOrla(sys.argv[1])
+  cropFaces.cropOrlas(sys.argv[1], sys.argv[2])
 
