@@ -5,6 +5,7 @@ from PIL import Image
 import cv2
 import sys
 import os
+import math
 
 '''
 Librería Python: Recorta imágenes dejando las caras para adaptarse a una escala concreta.
@@ -97,7 +98,7 @@ class BoxArea:
 class CropFaces:
   
   def __init__(self, zoom='AUTO', output=None):
-    #self.cascade = cv2.CascadeClassifier("/home/jmramoss/almacen/ORLAS/cropfaces/cropfaces/haarcascade_frontalface_alt.xml")
+    self.cascade = cv2.CascadeClassifier("/home/jmramoss/almacen/ORLAS/cropfaces/cropfaces/haarcascade_frontalface_alt.xml")
 
     #self.cascade = cv2.CascadeClassifier("/home/jmramoss/almacen/ORLAS/cropfaces/cropfaces/haarcascade_eye.xml)
     #self.cascade = cv2.CascadeClassifier("/home/jmramoss/almacen/ORLAS/cropfaces/cropfaces/haarcascade_frontalface_alt.xml")
@@ -107,7 +108,7 @@ class CropFaces:
 
     #self.cascade = cv2.CascadeClassifier("/home/jmramoss/almacen/ORLAS/cropfaces/cropfaces/haarcascade_upperbody.xml")
 
-    self.cascade = cv2.CascadeClassifier("/home/jmramoss/almacen/ORLAS/cropfaces/cropfaces/haarcascade_frontalface_alt_tree.xml")
+    #####################self.cascade = cv2.CascadeClassifier("/home/jmramoss/almacen/ORLAS/cropfaces/cropfaces/haarcascade_frontalface_alt_tree.xml")
 
     #self.cascade = cv2.CascadeClassifier("/home/jmramoss/Downloads/frontalFace10/haarcascade_frontalface_alt_tree.xml")
     #self.cascade = cv2.CascadeClassifier("/home/jmramoss/Downloads/frontalFace10/HS.xml")
@@ -160,6 +161,7 @@ class CropFaces:
     rects = self.cascade.detectMultiScale(gray, self.cv_scaleFactor, self.cv_minNeighbors, cv2.cv.CV_HAAR_SCALE_IMAGE, (20, 20))
     #rects = self.cascade.detectMultiScale(gray, self.cv_scaleFactor, self.cv_minNeighbors)
     #rects = self.cascade.detectMultiScale(img)
+    #rects = self.cascade.detectMultiScale(img, self.cv_scaleFactor, self.cv_minNeighbors, cv2.cv.CV_HAAR_SCALE_IMAGE, (4, 4))
     rects = [] if len(rects) == 0 else rects
     print rects
     #rects[:, 2:] += rects[:, :2]
@@ -231,21 +233,24 @@ class CropFaces:
     fSide = 1.10
     fBottom = 2.7
     '''
-    fHead = 0.6
-    fSide = 1.10
-    fBottom = 2.6
+    fHead = 0.7
+    fSide = 1.0
+    fBottom = 2.5
     if mode == 'NEAR':
       fHead = 0.6
-      fSide = 1.10
-      fBottom = 2.3
+      fSide = 0.9
+      fBottom = 2.2
     if mode == 'MIDDLE':
-      fHead = 0.6
-      fSide = 1.10
-      fBottom = 2.6
+      fHead = 0.7
+      fSide = 1.0
+      fBottom = 2.5
     if mode == 'FAR':
-      fHead = 0.6
+      fHead = 0.8
       fSide = 1.10
-      fBottom = 2.9
+      fBottom = 2.7
+      #fHead = 0.8
+      #fSide = 1.30
+      #fBottom = 3.15
     width = box.width
     height = box.height
 
@@ -274,10 +279,227 @@ class CropFaces:
         modeIdx += 1
 
 
+
+
+  def cropOrlaRatio (self, image, ratio=1.0):
+    box = self.detectBoxFaces(image)
+    if box is not None:
+      self.cropBoxOrlaRatio(image, box, ratio)
+
+  def cropBoxOrlaRatio (self, imagePath, box, ratio=1.0):
+    original = Image.open(imagePath)
+
+    fHead = 0.6
+    fSide = 1.10
+    fBottom = 3.5
+
+    width = box.width
+    height = box.height
+
+    newbox = BoxArea(box.left - int(fSide*width), box.top - int(fHead*height), box.right + int(fSide*width), box.bottom + int(fBottom*height))
+    inctb = 0
+    inclr = 0
+    if newbox.width != newbox.height:
+      diff = abs(newbox.height - newbox.width)
+      inc = math.ceil(diff/2)
+      if newbox.width < newbox.height:
+        inclr = inc
+      else:
+        inctb = inc
+    adjustbox = BoxArea(newbox.left - inclr, newbox.top - inctb, newbox.right + inclr, newbox.bottom + inctb)
+
+    cropped = original.crop((adjustbox.left, adjustbox.top, adjustbox.right, adjustbox.bottom))
+
+    newFileFolder = os.path.dirname(imagePath)
+    oldFileName = os.path.basename(imagePath)
+    extIdx = oldFileName.rindex('.')
+    fileExt = oldFileName[extIdx+1:]
+    newFileName = oldFileName[0:extIdx] + '_orla' + '.' + fileExt
+    newFile = os.path.join(newFileFolder, newFileName)
+    cropped.save(newFile, "jpeg", quality=100, optimize=True, progressive=True)
+
+  def cropOrlasRatio (self, folder, prefix):
+    files = os.listdir(folder)
+    modes = ['NEAR', 'MIDDLE', 'FAR']
+    modeIdx = 0
+    for filename in files:
+      if filename.startswith(prefix):
+        fullpath = os.path.join(folder, filename)
+        mode = modes[modeIdx%len(modes)]
+        self.cropOrlaRatio(fullpath, 1.0)
+        modeIdx += 1
+
+
+
+
+
+
+
+  def cropOrla2 (self, image, mode='AUTO'):
+    box = self.detectBoxFaces(image)
+    if box is not None:
+      self.cropBoxOrla2(image, box, mode)
+
+  def cropBoxOrla2 (self, imagePath, box, mode='AUTO'):
+    original = Image.open(imagePath)
+    '''
+    fHead = 1.10#1.10#1.10
+    fSide = 1.10#1.10#1.10
+    fBottom = 3.3#2.90#2.10
+    '''
+    '''
+    fHead = 1.10
+    fSide = 1.10
+    fBottom = 1.8
+    '''
+    '''
+    fHead = 0.7
+    fSide = 1.10
+    fBottom = 2.3
+    '''
+    '''
+    fHead = 0.6
+    fSide = 1.10
+    fBottom = 2.5
+    '''
+    '''
+    fHead = 0.6
+    fSide = 1.10
+    fBottom = 2.7
+    '''
+    fHead = 0.6
+    fSide = 0.9
+    fBottom = 1.2
+    if mode == 'NEAR':
+      fHead = 0.5
+      fSide = 0.9
+      fBottom = 0.6
+    if mode == 'MIDDLE':
+      fHead = 0.5
+      fSide = 0.9
+      fBottom = 0.8
+    if mode == 'FAR':
+      fHead = 0.5
+      fSide = 0.9
+      fBottom = 1.2
+    width = box.width
+    height = box.height
+
+    newbox = BoxArea(box.left - int(fSide*width), box.top - int(fHead*height), box.right + int(fSide*width), box.bottom + int(fBottom*height))
+    cropped = original.crop((newbox.left, newbox.top, newbox.right, newbox.bottom))
+    #cropped.save("img1.png", "PNG")
+    #cropped.save("img1.jpg", "jpeg")
+    #cropped.save("img1.jpg", "jpeg", quality=100, optimize=True, progressive=True)
+    newFileFolder = os.path.dirname(imagePath)
+    oldFileName = os.path.basename(imagePath)
+    extIdx = oldFileName.rindex('.')
+    fileExt = oldFileName[extIdx+1:]
+    newFileName = oldFileName[0:extIdx] + '_orla' + '.' + fileExt
+    newFile = os.path.join(newFileFolder, newFileName)
+    cropped.save(newFile, "jpeg", quality=100, optimize=True, progressive=True)
+
+  def cropOrlas2 (self, folder, prefix, mode):
+    files = os.listdir(folder)
+    #modes = ['NEAR', 'MIDDLE', 'FAR']
+    modeIdx = 0
+    for filename in files:
+      if filename.startswith(prefix):
+        fullpath = os.path.join(folder, filename)
+        #mode = modes[modeIdx%len(modes)]
+        self.cropOrla2(fullpath, mode)
+        modeIdx += 1
+
+
+
+
+
+
+
+  def crop1Head (self, image, mode='AUTO'):
+    box = self.detectBoxFaces(image)
+    if box is not None:
+      self.cropBox1Head(image, box, mode)
+
+  def cropBox1Head (self, imagePath, box, mode='AUTO'):
+    original = Image.open(imagePath)
+    '''
+    fHead = 1.10#1.10#1.10
+    fSide = 1.10#1.10#1.10
+    fBottom = 3.3#2.90#2.10
+    '''
+    '''
+    fHead = 1.10
+    fSide = 1.10
+    fBottom = 1.8
+    '''
+    '''
+    fHead = 0.7
+    fSide = 1.10
+    fBottom = 2.3
+    '''
+    '''
+    fHead = 0.6
+    fSide = 1.10
+    fBottom = 2.5
+    '''
+    '''
+    fHead = 0.6
+    fSide = 1.10
+    fBottom = 2.7
+    '''
+    fHead = 0.6
+    fSide = 0.9
+    fBottom = 1.2
+    if mode == 'NEAR':
+      fHead = 0.5
+      fSide = 0.9
+      fBottom = 0.6
+    if mode == 'MIDDLE':
+      fHead = 0.5
+      fSide = 0.9
+      fBottom = 0.8
+    if mode == 'FAR':
+      fHead = 0.5
+      fSide = 0.9
+      fBottom = 1.2
+    width = box.width
+    height = box.height
+
+    newbox = BoxArea(box.left - int(fSide*width), box.top - int(fHead*height), box.right + int(fSide*width), box.bottom + int(fBottom*height))
+    cropped = original.crop((newbox.left, newbox.top, newbox.right, newbox.bottom))
+    #cropped.save("img1.png", "PNG")
+    #cropped.save("img1.jpg", "jpeg")
+    #cropped.save("img1.jpg", "jpeg", quality=100, optimize=True, progressive=True)
+    newFileFolder = os.path.dirname(imagePath)
+    oldFileName = os.path.basename(imagePath)
+    extIdx = oldFileName.rindex('.')
+    fileExt = oldFileName[extIdx+1:]
+    newFileName = oldFileName[0:extIdx] + '_orla' + '.' + fileExt
+    newFile = os.path.join(newFileFolder, newFileName)
+    cropped.save(newFile, "jpeg", quality=100, optimize=True, progressive=True)
+
+  def cropFolder1Head (self, folder, mode, prefix):
+    files = os.listdir(folder)
+    #modes = ['NEAR', 'MIDDLE', 'FAR']
+    modeIdx = 0
+    for filename in files:
+      if filename.startswith(prefix):
+        fullpath = os.path.join(folder, filename)
+        #mode = modes[modeIdx%len(modes)]
+        self.crop1Head(fullpath, mode)
+        modeIdx += 1
+
+
+
+
+
+
 #python -c "import sys; import svgmanager; svgmanager.SvgManager.generate(sys.argv)"
 #./cropfaces.py /home/jmramoss/almacen/ORLAS/orlas_infantiles/infantil_5b teacher
 if __name__ == '__main__':
   cropFaces = CropFaces()
   #cropFaces.cropOrla(sys.argv[1])
-  cropFaces.cropOrlas(sys.argv[1], sys.argv[2])
+  #cropFaces.cropOrlas(sys.argv[1], sys.argv[2])
+  #cropFaces.cropOrlasRatio(sys.argv[1], sys.argv[2])
+  cropFaces.cropOrlas2(sys.argv[1], sys.argv[2], sys.argv[3])
 
