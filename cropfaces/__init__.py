@@ -1,2 +1,2 @@
-import .tool
-import .cropfaces
+import tool
+import cropfaces
