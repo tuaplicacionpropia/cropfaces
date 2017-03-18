@@ -131,7 +131,8 @@ class CropFaces:
 
     self.cv_scaleFactor = 1.1
     self.cv_minNeighbors = 3
-    self.cv_flags = cv2.cv.CV_HAAR_SCALE_IMAGE
+    #self.cv_flags = cv2.cv.CV_HAAR_SCALE_IMAGE
+    self.cv_flags = cv2.CASCADE_SCALE_IMAGE
     self.cv_size = (20, 20)
 
   def cropBox (self, imagePath, box):
@@ -158,7 +159,8 @@ class CropFaces:
     #gray = cv2.calcHist(gray, 3)
     #rects = self.cascade.detectMultiScale(gray, self.cv_scaleFactor, self.cv_minNeighbors, self.cv_flags, self.cv_size)
     #rects = self.cascade.detectMultiScale(gray, self.cv_scaleFactor, self.cv_minNeighbors, self.cv_flags)
-    rects = self.cascade.detectMultiScale(gray, self.cv_scaleFactor, self.cv_minNeighbors, cv2.cv.CV_HAAR_SCALE_IMAGE, (20, 20))
+    #rects = self.cascade.detectMultiScale(gray, self.cv_scaleFactor, self.cv_minNeighbors, cv2.cv.CV_HAAR_SCALE_IMAGE, (20, 20))
+    rects = self.cascade.detectMultiScale(gray, self.cv_scaleFactor, self.cv_minNeighbors, cv2.CASCADE_SCALE_IMAGE, (20, 20))
     #rects = self.cascade.detectMultiScale(gray, self.cv_scaleFactor, self.cv_minNeighbors)
     #rects = self.cascade.detectMultiScale(img)
     #rects = self.cascade.detectMultiScale(img, self.cv_scaleFactor, self.cv_minNeighbors, cv2.cv.CV_HAAR_SCALE_IMAGE, (4, 4))
