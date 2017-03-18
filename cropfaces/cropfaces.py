@@ -95,6 +95,28 @@ class BoxArea:
   def __str__(self):
     return self.__str__()
 
+  def __eq__(self, other):
+    selfSurface = self.width * self.height
+    otherSurface = other.width * other.height
+    return selfSurface == otherSurface
+
+  def __lt__(self, other):
+    selfSurface = self.width * self.height
+    otherSurface = other.width * other.height
+    return selfSurface < otherSurface
+
+  def __ne__(self, other):
+    return not (self == other)
+
+  def __gt__(self, other):
+    return other < self
+
+  def __le__(self, other):
+    return (self < other) or (self == other)
+
+  def __ge__(self, other):
+    return (self > other) or (self == other)
+
 class CropFaces:
   
   def __init__(self, zoom='AUTO', output=None):
@@ -412,14 +434,19 @@ class CropFaces:
         modeIdx += 1
 
 
-
-
-
-
+  def detectBoxFaces1Head (self, image):
+    result = None
+    faces = self.detectFaces(image)
+    onehead = None
+    for face in faces:
+      onehead = face if (onehead is None or onehead < face) else onehead
+    onlyOneHead = [onehead]
+    result = self.mergeFaces(image, onlyOneHead)
+    return result
 
   def crop1Head (self, image, output, mode='AUTO'):
     result = None
-    box = self.detectBoxFaces(image)
+    box = self.detectBoxFaces1Head(image)
     if box is not None:
       result = self.cropBox1Head(image, output, box, mode)
     return result

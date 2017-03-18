@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='cropfaces',
-    version='0.0.35',
+    version='0.0.36',
     url='https://github.com/tuaplicacionpropia/cropfaces',
     download_url='https://github.com/tuaplicacionpropia/cropfaces/archive/master.zip',
     author=u'tuaplicacionpropia.com',
