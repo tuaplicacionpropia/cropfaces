@@ -47,7 +47,8 @@ def main():
             args.append(arg)
 
     cropFaces = cropfaces.CropFaces()
-    cropFaces.crop1Head(sys.argv[1], sys.argv[2])
+    output = cropFaces.crop1Head(sys.argv[1], None, sys.argv[2])
+    print output
 
 if __name__ == '__main__':
     main()

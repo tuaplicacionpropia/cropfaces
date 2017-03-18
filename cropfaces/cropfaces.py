@@ -417,12 +417,15 @@ class CropFaces:
 
 
 
-  def crop1Head (self, image, mode='AUTO'):
+  def crop1Head (self, image, output, mode='AUTO'):
+    result = None
     box = self.detectBoxFaces(image)
     if box is not None:
-      self.cropBox1Head(image, box, mode)
+      result = self.cropBox1Head(image, output, box, mode)
+    return result
 
-  def cropBox1Head (self, imagePath, box, mode='AUTO'):
+  def cropBox1Head (self, imagePath, output, box, mode='AUTO'):
+    result = None
     original = Image.open(imagePath)
     '''
     fHead = 1.10#1.10#1.10
@@ -476,9 +479,13 @@ class CropFaces:
     oldFileName = os.path.basename(imagePath)
     extIdx = oldFileName.rindex('.')
     fileExt = oldFileName[extIdx+1:]
-    newFileName = oldFileName[0:extIdx] + '_orla' + '.' + fileExt
-    newFile = os.path.join(newFileFolder, newFileName)
+    newFile = output
+    if newFile is None:
+      newFileName = oldFileName[0:extIdx] + '_orla' + '.' + fileExt
+      newFile = os.path.join(newFileFolder, newFileName)
     cropped.save(newFile, "jpeg", quality=100, optimize=True, progressive=True)
+    result = newFile
+    return result
 
   def cropFolder1Head (self, folder, mode, prefix):
     files = os.listdir(folder)
