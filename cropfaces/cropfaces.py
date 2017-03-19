@@ -486,14 +486,30 @@ class CropFaces:
       fHead = 0.5
       fSide = 0.9
       fBottom = 0.6
-    if mode == 'MIDDLE':
+    elif mode == 'MIDDLE':
       fHead = 0.5
       fSide = 0.9
       fBottom = 0.8
-    if mode == 'FAR':
+    elif mode == 'FAR':
       fHead = 0.5
       fSide = 0.9
       fBottom = 1.2
+    elif mode == 'MODE1':
+      fHead = 0.7
+      fSide = 0.9
+      fBottom = 2.2
+    elif mode == 'MODE2':
+      fHead = 0.7
+      fSide = 1.0
+      fBottom = 2.5
+    elif mode == 'MODE3':
+      fHead = 0.85
+      fSide = 0.9
+      fBottom = 2.2
+    elif mode == 'MODE4':
+      fHead = 0.85
+      fSide = 1.0
+      fBottom = 2.5
     width = box.width
     height = box.height
 
