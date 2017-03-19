@@ -453,6 +453,43 @@ class CropFaces:
 
   def cropBox1Head (self, imagePath, output, box, mode='AUTO'):
     result = None
+    if isinstance(mode, list):
+      result = self.cropBox1HeadArray(imagePath, output, box, mode)
+    else:
+      result = self.cropBox1HeadStr(imagePath, output, box, mode)
+    return result
+
+  def cropBox1HeadArray (self, imagePath, output, box, mode=[1932, 2801, 200]):
+    result = None
+    original = Image.open(imagePath)
+
+    realwidth = mode[0]
+    realheight = mode[1]
+    septop = mode[2]
+
+    newleft = (box.left + (box.width / 2)) - (realwidth / 2)
+    newtop = box.top - septop
+    newright = newleft + realwidth
+    newbottom = newtop + realheight
+
+    newbox = BoxArea(newleft, newtop, newright, newbottom)
+
+    cropped = original.crop((newbox.left, newbox.top, newbox.right, newbox.bottom))
+
+    newFileFolder = os.path.dirname(imagePath)
+    oldFileName = os.path.basename(imagePath)
+    extIdx = oldFileName.rindex('.')
+    fileExt = oldFileName[extIdx+1:]
+    newFile = output
+    if newFile is None:
+      newFileName = oldFileName[0:extIdx] + '_orla' + '.' + fileExt
+      newFile = os.path.join(newFileFolder, newFileName)
+    cropped.save(newFile, "jpeg", quality=100, optimize=True, progressive=True)
+    result = newFile
+    return result
+
+  def cropBox1HeadStr (self, imagePath, output, box, mode='AUTO'):
+    result = None
     original = Image.open(imagePath)
     '''
     fHead = 1.10#1.10#1.10
@@ -510,6 +547,7 @@ class CropFaces:
       fHead = 0.85
       fSide = 1.0
       fBottom = 2.5
+
     width = box.width
     height = box.height
 
