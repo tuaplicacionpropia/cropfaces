@@ -6,6 +6,8 @@ import cv2
 import sys
 import os
 import math
+import shutil
+
 
 '''
 Librería Python: Recorta imágenes dejando las caras para adaptarse a una escala concreta.
@@ -713,7 +715,7 @@ class CropFaces:
       newFile = self.saveCrop(cropped, imagePath, i + 1, exif)
       self.cropAgainMoreSquares(newFile)
 
-  def cropAllSquares (self, imagePath):
+  def cropAllSquares_Base (self, imagePath):
     original = Image.open(imagePath)
     imgWidth = original.width
     imgHeight = original.height
@@ -722,6 +724,12 @@ class CropFaces:
         self.cropAllSquaresHorizontal(original, imagePath)
       else:
         self.cropAllSquaresVertical(original, imagePath)
+
+
+  def cropAllSquares (self, imagePath):
+    self.cropAllSquares_Base(imagePath)
+    imgEnfocada = self.enfocar(imagePath, 'enfocada')
+    self.cropAllSquares_Base(imgEnfocada)
 
   def cropFolderAllSquares (self, folder):
     files = os.listdir(folder)
@@ -743,6 +751,28 @@ class CropFaces:
       print 'Read a new frame: ', success
       cv2.imwrite("frame%d.jpg" % count, image)     # save frame as JPEG file
       count += 1 
+
+  #gimp -i -b '(python-my-enfocar RUN-NONINTERACTIVE "/home/jmramoss/almacen/VIDEO_COLEGIO/examples/MUESTRA2.jpg")' -b '(gimp-quit 0)'
+  def enfocar (self, imagePath, i):
+    print 'enfocar'
+    newFileFolder = os.path.dirname(imagePath)
+    oldFileName = os.path.basename(imagePath)
+    extIdx = oldFileName.rindex('.')
+    fileExt = oldFileName[extIdx+1:]
+    idx = ''
+    try:
+      val = int(i)
+      idx = (3 - len(str(val+1)))*'0' + str(val+1)
+    except ValueError:
+      idx = str(i)
+    newFileName = oldFileName[0:extIdx] + '_' + idx + '.' + fileExt
+    newFile = os.path.join(newFileFolder, newFileName)
+    result = newFile
+    shutil.copyfile(imagePath, newFile)
+    cmd = "gimp -i -b '(python-my-enfocar RUN-NONINTERACTIVE \"" + newFile + "\")' -b '(gimp-quit 0)'"
+    os.system(cmd)
+    #gimp -i -b '(python-my-enfocar RUN-NONINTERACTIVE "/home/jmramoss/almacen/VIDEO_COLEGIO/examples/MUESTRA2.jpg")' -b '(gimp-quit 0)'
+    return result
 
 #python -c "import sys; import svgmanager; svgmanager.SvgManager.generate(sys.argv)"
 #./cropfaces.py /home/jmramoss/almacen/ORLAS/orlas_infantiles/infantil_5b teacher
