@@ -579,6 +579,63 @@ class CropFaces:
         self.crop1Head(fullpath, mode)
         modeIdx += 1
 
+  def cropAllSquaresHorizontal (self, img, imagePath):
+    size = img.height
+    numSplits = int(img.width / size) + 1
+    offset = size - int(img.width / numSplits)
+    start = 0
+    for i in range(0, numSplits):
+      if i > 0:
+        start += size - offset
+        start = img.width - size if (start + size) > img.width else start
+      cropped = original.crop((start, 0, start + size, size))
+
+      newFileFolder = os.path.dirname(imagePath)
+      oldFileName = os.path.basename(imagePath)
+      extIdx = oldFileName.rindex('.')
+      fileExt = oldFileName[extIdx+1:]
+      idx = (3 - len(str(i)))*'0' + str(i)
+      newFileName = oldFileName[0:extIdx] + '_' + idx + '.' + fileExt
+      newFile = os.path.join(newFileFolder, newFileName)
+
+      cropped.save(newFile, "jpeg", quality=100, optimize=True, progressive=True)
+
+  def cropAllSquaresVertical (self, img, imagePath):
+    size = img.width
+    numSplits = int(img.height / size) + 1
+    offset = size - int(img.height / numSplits)
+    start = 0
+    for i in range(0, numSplits):
+      if i > 0:
+        start += size - offset
+        start = img.height - size if (start + size) > img.height else start
+      cropped = original.crop((0, start, size, start + size))
+
+      newFileFolder = os.path.dirname(imagePath)
+      oldFileName = os.path.basename(imagePath)
+      extIdx = oldFileName.rindex('.')
+      fileExt = oldFileName[extIdx+1:]
+      idx = (3 - len(str(i)))*'0' + str(i)
+      newFileName = oldFileName[0:extIdx] + '_' + idx + '.' + fileExt
+      newFile = os.path.join(newFileFolder, newFileName)
+
+      cropped.save(newFile, "jpeg", quality=100, optimize=True, progressive=True)
+
+  def cropAllSquares (self, imagePath):
+    original = Image.open(imagePath)
+    imgWidth = original.width
+    imgHeight = original.height
+    if imgWidth != imgHeight:
+      if imgWidth > imgHeight:
+        self.cropAllSquaresHorizontal(original, imagePath)
+      else:
+        self.cropAllSquaresVertical(original, imagePath)
+
+  def cropFolderAllSquares (self, folder):
+    files = os.listdir(folder)
+    for filename in files:
+      fullpath = os.path.join(folder, filename)
+      self.cropAllSquares(fullpath)
 
 
 
