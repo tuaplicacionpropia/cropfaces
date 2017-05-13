@@ -579,47 +579,139 @@ class CropFaces:
         self.crop1Head(fullpath, mode)
         modeIdx += 1
 
+  def cropAgainMoreSquares (self, imagePath):
+    img = Image.open(imagePath)
+    size = img.width
+    if size > 700:
+      newsize = int(size / 2)
+      newsize = int(newsize * 1.20)
+      newsize2 = int(size * 0.80)
+      offset2 = int(size * 0.10)
+      
+      exif = img.info['exif'] if 'exif' in img.info else None
+
+      self.saveCrop(img.crop((offset2, offset2, newsize2, newsize2)), imagePath, 0, exif)
+
+      self.saveCrop(img.crop((0, 0, newsize, newsize)), imagePath, 1, exif)
+      self.saveCrop(img.crop((size - newsize, 0, size, newsize)), imagePath, 2, exif)
+      self.saveCrop(img.crop((0, size - newsize, newsize, size)), imagePath, 3, exif)
+      self.saveCrop(img.crop((size - newsize, size - newsize, size, size)), imagePath, 4, exif)
+
+      self.saveCrop(img.crop((offset2, 0, offset2 + newsize2, newsize2)), imagePath, 5, exif)
+      self.saveCrop(img.crop((offset2, size - newsize2, offset2 + newsize2, size)), imagePath, 6, exif)
+
+  def saveCrop (self, cropped, imagePath, i, exif):
+    result = None
+    newFileFolder = os.path.dirname(imagePath)
+    oldFileName = os.path.basename(imagePath)
+    extIdx = oldFileName.rindex('.')
+    fileExt = oldFileName[extIdx+1:]
+    idx = ''
+    try:
+      val = int(i)
+      idx = (3 - len(str(val+1)))*'0' + str(val+1)
+    except ValueError:
+      idx = str(i)
+    newFileName = oldFileName[0:extIdx] + '_' + idx + '.' + fileExt
+    newFile = os.path.join(newFileFolder, newFileName)
+    result = newFile
+    if exif is None:
+      cropped.save(newFile, "jpeg", quality=100, optimize=True, progressive=True)
+    else:
+      cropped.save(newFile, "jpeg", quality=100, optimize=True, progressive=True, exif=exif)
+    return result
+
+  def cropHeadSquare (self, img, imagePath, exif):
+    face = self.detectBoxFaces(imagePath)
+    if face is not None:
+      print 'face = ' + str(face.left) + ', ' + str(face.top) + ', ' + str(face.right) + ', ' + str(face.bottom)
+      pivotX = face.left + int(face.width / 2)
+      pivotY = face.top + int(face.height / 2)
+      
+      facesize = int(min(10*face.height, min(img.width, img.height)) / 10)
+
+      left = pivotX - (5*facesize)
+      right = pivotX + (5*facesize)
+      top = pivotY - (4*facesize)
+      bottom = pivotY + (6*facesize)
+
+      print 'left = ' + str(left)
+      print 'right = ' + str(right)
+      print 'top = ' + str(top)
+      print 'bottom = ' + str(bottom)
+
+      print 'img.width = ' + str(img.width)
+      print 'img.height = ' + str(img.height)
+
+      if left < 0 or right > img.width or top < 0 or bottom > img.height:
+        fScale = None
+        if right > img.width:
+          fScale = float(right) / float(img.width)
+        elif bottom > img.height:
+          fScale = float(bottom) / float(img.height)
+        if fScale is not None:
+          print 'fScale = ' + str(fScale)
+          left = int(left / fScale)
+          top = int(top / fScale)
+          right = int(right / fScale)
+          bottom = int(bottom / fScale)
+          if (right - left) > (bottom - top):
+            right -= ((right - left) - (bottom - top))
+          elif (right - left) < (bottom - top):
+            bottom -= ((bottom - top) - (right - left))
+
+      print 'left = ' + str(left)
+      print 'right = ' + str(right)
+      print 'top = ' + str(top)
+      print 'bottom = ' + str(bottom)
+
+      newFile = self.saveCrop(img.crop((left, top, right, bottom)), imagePath, 'face', exif)
+      #self.cropAgainMoreSquares(newFile)
+
+
   def cropAllSquaresHorizontal (self, img, imagePath):
+    exif = img.info['exif'] if 'exif' in img.info else None
     size = img.height
     numSplits = int(img.width / size) + 1
     offset = size - int(img.width / numSplits)
+
+    self.cropHeadSquare(img, imagePath, exif)
+
+    left = int((img.width - size)/2)
+    newFile = self.saveCrop(img.crop((left, 0, left + size, size)), imagePath, 0, exif)
+    self.cropAgainMoreSquares(newFile)
+
     start = 0
     for i in range(0, numSplits):
       if i > 0:
         start += size - offset
         start = img.width - size if (start + size) > img.width else start
-      cropped = original.crop((start, 0, start + size, size))
+      cropped = img.crop((start, 0, start + size, size))
 
-      newFileFolder = os.path.dirname(imagePath)
-      oldFileName = os.path.basename(imagePath)
-      extIdx = oldFileName.rindex('.')
-      fileExt = oldFileName[extIdx+1:]
-      idx = (3 - len(str(i)))*'0' + str(i)
-      newFileName = oldFileName[0:extIdx] + '_' + idx + '.' + fileExt
-      newFile = os.path.join(newFileFolder, newFileName)
-
-      cropped.save(newFile, "jpeg", quality=100, optimize=True, progressive=True)
+      newFile = self.saveCrop(cropped, imagePath, i + 1, exif)
+      self.cropAgainMoreSquares(newFile)
 
   def cropAllSquaresVertical (self, img, imagePath):
+    exif = img.info['exif'] if 'exif' in img.info else None
     size = img.width
     numSplits = int(img.height / size) + 1
     offset = size - int(img.height / numSplits)
+
+    self.cropHeadSquare(img, imagePath, exif)
+
+    top = int((img.height - size)/2)
+    newFile = self.saveCrop(img.crop((0, top, size, top + size)), imagePath, 0, exif)
+    self.cropAgainMoreSquares(newFile)
+
     start = 0
     for i in range(0, numSplits):
       if i > 0:
         start += size - offset
         start = img.height - size if (start + size) > img.height else start
-      cropped = original.crop((0, start, size, start + size))
+      cropped = img.crop((0, start, size, start + size))
 
-      newFileFolder = os.path.dirname(imagePath)
-      oldFileName = os.path.basename(imagePath)
-      extIdx = oldFileName.rindex('.')
-      fileExt = oldFileName[extIdx+1:]
-      idx = (3 - len(str(i)))*'0' + str(i)
-      newFileName = oldFileName[0:extIdx] + '_' + idx + '.' + fileExt
-      newFile = os.path.join(newFileFolder, newFileName)
-
-      cropped.save(newFile, "jpeg", quality=100, optimize=True, progressive=True)
+      newFile = self.saveCrop(cropped, imagePath, i + 1, exif)
+      self.cropAgainMoreSquares(newFile)
 
   def cropAllSquares (self, imagePath):
     original = Image.open(imagePath)
@@ -634,12 +726,23 @@ class CropFaces:
   def cropFolderAllSquares (self, folder):
     files = os.listdir(folder)
     for filename in files:
-      fullpath = os.path.join(folder, filename)
-      self.cropAllSquares(fullpath)
+      if filename.endswith(".png") or filename.endswith(".jpg"):
+        fullpath = os.path.join(folder, filename)
+        self.cropAllSquares(fullpath)
 
-
-
-
+  #ffmpeg -i 20150311_125438.mp4 -filter:v fps=fps=1/0.2 ffmpeg_%0d.bmp
+  def videoframes (self, fileVideo):
+    import cv2
+    print(cv2.__version__)
+    vidcap = cv2.VideoCapture(fileVideo)
+    
+    count = 0
+    success = True
+    while success:
+      success,image = vidcap.read()
+      print 'Read a new frame: ', success
+      cv2.imwrite("frame%d.jpg" % count, image)     # save frame as JPEG file
+      count += 1 
 
 #python -c "import sys; import svgmanager; svgmanager.SvgManager.generate(sys.argv)"
 #./cropfaces.py /home/jmramoss/almacen/ORLAS/orlas_infantiles/infantil_5b teacher

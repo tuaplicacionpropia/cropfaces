@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='cropfaces',
-    version='0.0.39',
+    version='0.0.75',
     url='https://github.com/tuaplicacionpropia/cropfaces',
     download_url='https://github.com/tuaplicacionpropia/cropfaces/archive/master.zip',
     author=u'tuaplicacionpropia.com',
@@ -20,7 +20,11 @@ setup(
       'Intended Audience :: Developers', 
       'Topic :: Multimedia :: Graphics',
     ],
-    scripts=['bin/cropfaces', 'bin/cropfaces.cmd',],
+    scripts=[
+      'bin/cropfaces', 'bin/cropfaces.cmd',
+      'bin/cropfoldersquares', 'bin/cropfoldersquares.cmd',
+      'bin/cropvideoframes', 'bin/cropvideoframes.cmd',
+    ],
     packages=find_packages(exclude=['tests']),
     zip_safe=False,
     include_package_data=True,
