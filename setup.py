@@ -33,7 +33,7 @@ setup(
     install_requires=[
         'numpy==1.12.0b1', 
         'opencv-python==3.1.0.3', 
-        'Pillow==3.4.2',
+        'Pillow==8.3.2',
     ],
 )
 
