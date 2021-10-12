@@ -32,7 +32,7 @@ setup(
     license='MIT',
     install_requires=[
         'numpy==1.12.0b1', 
-        'opencv-python==3.1.0.3', 
+        'opencv-python==3.3.1.11', 
         'Pillow==3.4.2',
     ],
 )
