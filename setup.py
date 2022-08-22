@@ -31,7 +31,7 @@ setup(
     platforms='any',
     license='MIT',
     install_requires=[
-        'numpy==1.12.0b1', 
+        'numpy==1.22.0', 
         'opencv-python==3.1.0.3', 
         'Pillow==3.4.2',
     ],
